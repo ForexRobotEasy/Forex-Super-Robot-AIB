@@ -1,0 +1,82 @@
+mql5
+//+------------------------------------------------------------------+
+//|                                         Forex Super Robot AIB.mq5 |
+//|                                               © Forex Robot Easy |
+//|                                         https://www.forexroboteasy.com |
+//+------------------------------------------------------------------+
+
+//--- External settings
+extern string currencyPair = 'EURUSD';
+extern double takeProfit = 50;
+extern double stopLoss = 50;
+
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+   // Attach the robot to the specified currency pair and timeframe
+   if (!SymbolSelect(currencyPair, true))
+   {
+      Print('Failed to select symbol ', currencyPair);
+      return INIT_FAILED;
+   }
+   
+   // Set initial take profit and stop loss values
+   SetTakeProfit(takeProfit);
+   SetStopLoss(stopLoss);
+   
+   return INIT_SUCCEEDED;
+}
+
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+   // Close all open orders before deinitialization
+   CloseAllOrders();
+}
+
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick()
+{
+   // Check if there are any open orders
+   if (OrdersTotal() > 0)
+   {
+      // Close all open orders
+      CloseAllOrders();
+   }
+   else
+   {
+      // Execute multiple entries
+      for (int i = 0; i < 20; i++)
+      {
+         // Place an order with specific parameters
+         if (!OrderSend(currencyPair, OP_BUY, 0.1, Ask, 0, 0, 0, 'Entry #' + IntegerToString(i)))
+         {
+            Print('Failed to place entry ', i);
+         }
+      }
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Function to close all open orders                                |
+//+------------------------------------------------------------------+
+void CloseAllOrders()
+{
+   for (int i = OrdersTotal() - 1; i >= 0; i--)
+   {
+      if (OrderSelect(i, SELECT_BY_POS, MODE_TRADES))
+      {
+         // Close the order
+         if (!OrderClose(OrderTicket(), OrderLots(), Bid, 0, clrRed))
+         {
+            Print('Failed to close order ', OrderTicket());
+         }
+      }
+   }
+}
